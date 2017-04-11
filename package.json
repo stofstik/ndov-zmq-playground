@@ -12,6 +12,7 @@
     "jsonstream2": "^1.1.1",
     "moment": "^2.18.1",
     "pretty-data": "^0.40.0",
+    "underscore": "^1.8.3",
     "xml-stream": "^0.4.5",
     "xml2js": "^0.4.17",
     "zmq": "^2.15.3"
