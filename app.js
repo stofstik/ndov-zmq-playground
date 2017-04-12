@@ -76,68 +76,120 @@ class Printer extends Writable {
 		options = options || {}
 		options.objectMode = true
 		super(options)
-		this.departure = []
+		this.init      = []
 		this.arrival   = []
+		this.onstop    = []
+		this.departure = []
 		this.onroute   = []
+		this.offroute  = []
+		this.end       = []
 		setInterval(() => {
-			function filter(num) {
-				return num >= 4300 && num <= 4303
-			}
-			const departure = _.chain(this.departure)
-				.flatten()
-				.filter((i) => {
-					const num = parseInt(i.vehiclenumber)
-					return filter(num)
-				})
+			function filter(array) {
+				return _.chain(array)
+					.flatten()
+					.filter((i) => {
+						const num = parseInt(i.vehiclenumber)
+						return num >= 4300 && num <= 4303
+					})
 				.value()
-			if(departure.length > 0) {
-				console.log('#########')
-				console.log('DEPARTURE')
-				console.log('#########')
-				console.log(departure)
+
 			}
-			const arrival = _.chain(this.arrival)
-				.flatten()
-				.filter((i) => {
-					const num = parseInt(i.vehiclenumber)
-					return filter(num)
-				})
-				.value()
+
+			// Transmitted when a vehicle is connected to a journey
+			const init = filter(this.init)
+			if(init.length > 0) {
+				console.log('####')
+				console.log('INIT')
+				console.log('####')
+				console.log(now())
+				console.log(init)
+			}
+
+			// Transmitted wVhen a vehicle arrived at a stop
+			const arrival = filter(this.arrival)
 			if(arrival.length > 0) {
 				console.log('#######')
 				console.log('ARRIVAL')
 				console.log('#######')
+				console.log(now())
 				console.log(arrival)
 			}
 
-			const onRoute = _.chain(this.onroute)
-				.flatten()
-				.filter((i) => {
-					const num = parseInt(i.vehiclenumber)
-					return filter(num)
-				})
-				.value()
-			if(onRoute.length > 0) {
+			const onstop = filter(this.onstop)
+			if(onstop.length > 0) {
+				console.log('######')
+				console.log('ONSTOP')
+				console.log('######')
+				console.log(now())
+				console.log(onstop)
+			}
+
+			const departure = filter(this.departure)
+			if(departure.length > 0) {
+				console.log('#########')
+				console.log('DEPARTURE')
+				console.log('#########')
+				console.log(now())
+				console.log(departure)
+			}
+
+			const onroute = filter(this.onroute)
+			if(onroute.length > 0) {
 				console.log('#######')
 				console.log('ONROUTE')
 				console.log('#######')
-				console.log(onRoute)
+				console.log(now())
+				console.log(onroute)
 			}
 
-			this.departure = []
+			const offroute = filter(this.offroute)
+			if(offroute.length > 0) {
+				console.log('#######')
+				console.log('ONROUTE')
+				console.log('#######')
+				console.log(now())
+				console.log(offroute)
+			}
+
+			const end = filter(this.end)
+			if(end.length > 0) {
+				console.log('###')
+				console.log('END')
+				console.log('###')
+				console.log(now())
+				console.log(end)
+			}
+
+			this.init      = []
 			this.arrival   = []
+			this.onstop    = []
+			this.departure = []
 			this.onroute   = []
+			this.offroute  = []
+			this.end       = []
 		}, 1000)
 	}
 	_write(obj, enc, cb) {
-		if(obj.departure) {
-			this.departure.push((obj.departure))
+		if(obj.init) {
+			this.init.push((obj.init))
 		}
 		if(obj.arrival) {
 			this.arrival.push((obj.arrival))
 		}
+		if(obj.onstop) {
+			this.onstop.push((obj.onstop))
+		}
+		if(obj.departure) {
+			this.departure.push((obj.departure))
+		}
 		if(obj.onroute) {
 			this.onroute.push((obj.onroute))
+		}
+		if(obj.offroute) {
+			this.offroute.push((obj.offroute))
+		}
+		if(obj.end) {
+			this.end.push((obj.end))
 		}
 		cb(null, obj)
 	}
