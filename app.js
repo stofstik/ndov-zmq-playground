@@ -84,15 +84,15 @@ class Printer extends Writable {
 		this.offroute  = []
 		this.end       = []
 		setInterval(() => {
+			// console.log(Date())
 			function filter(array) {
 				return _.chain(array)
 					.flatten()
+					.uniq("vehiclenumber")
 					.filter((i) => {
-						const num = parseInt(i.vehiclenumber)
-						return num >= 4300 && num <= 4303
+						return [ 'u002' ].includes(i.lineplanningnumber)
 					})
 				.value()
-
 			}
 
 			// Transmitted when a vehicle is connected to a journey
@@ -169,6 +169,7 @@ class Printer extends Writable {
 			this.end       = []
 		}, 1000)
 	}
+
 	_write(obj, enc, cb) {
 		if(obj.init) {
 			this.init.push((obj.init))
@@ -221,6 +222,55 @@ class Filter extends ObjectTransform {
 	}
 }
 
+class Splitter extends ObjectTransform {
+	constructor(options, filter) {
+		super(options)
+	}
+
+	_transform(objs, enc, cb) {
+		let init      = []
+		let arrival   = []
+		let onstop    = []
+		let departure = []
+		let onroute   = []
+		let offroute  = []
+		let end       = []
+		for(const obj in objs) {
+			if(objs[obj].init) {
+				init.push((objs[obj].init))
+			}
+			if(objs[obj].arrival) {
+				arrival.push((objs[obj].arrival))
+			}
+			if(objs[obj].onstop) {
+				onstop.push((objs[obj].onstop))
+			}
+			if(objs[obj].departure) {
+				departure.push((objs[obj].departure))
+			}
+			if(objs[obj].onroute) {
+				onroute.push((objs[obj].onroute))
+			}
+			if(objs[obj].offroute) {
+				offroute.push((objs[obj].offroute))
+			}
+			if(objs[obj].end) {
+				end.push((objs[obj].end))
+			}
+		}
+		const object = {
+			init:      init,
+			arrival:   arrival,
+			onstop:    onstop,
+			departure: departure,
+			onroute:   onroute,
+			offroute:  offroute,
+			end:       end
+		}
+		cb(null, object)
+	}
+}
+
 class Wrapper extends Readable {
 	constructor({options, subje}) {
 		options = options || {}
@@ -255,6 +305,7 @@ const toString  = new ToString()
 const pretty    = new Prettify()
 const xmltojs   = new XMLtoJS()
 const filter    = new Filter()
+const splitter  = new Splitter()
 const printer   = new Printer()
 const stringify = jsonStream.stringify(false)
 
@@ -262,4 +313,5 @@ wrapper
 	.pipe(toString)
 	.pipe(xmltojs)
 	.pipe(filter)
+	.pipe(splitter)
 	.pipe(printer)
