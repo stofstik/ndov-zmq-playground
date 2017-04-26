@@ -22,9 +22,6 @@ function now() {
 	return moment(new Date).format(format)
 }
 
-sub.connect('tcp://pubsub.besteffort.ndovloket.nl:7658')
-sub.monitor()
-
 // // Register to monitoring events
 // sub.on('connect', function(fd, ep) {console.log('connect, endpoint:', ep)})
 // sub.on('connect_delay', function(fd, ep) {console.log('connect_delay, endpoint:', ep)})
@@ -35,6 +32,9 @@ sub.monitor()
 // sub.on('accept_error', function(fd, ep) {console.log('accept_error, endpoint:', ep)})
 // sub.on('close_error', function(fd, ep) {console.log('close_error, endpoint:', ep)})
 // sub.on('disconnect', function(fd, ep) {console.log('disconnect, endpoint:', ep)})
+sub.connect('tcp://pubsub.besteffort.ndovloket.nl:7658')
+sub.monitor()
+
 sub.subscribe('/QBUZZ/KV6posinfo')
 
 console.log(now(), 'started listening')
@@ -214,8 +214,8 @@ class Filter extends ObjectTransform {
 		super(options)
 	}
 	_transform(obj, enc, cb) {
-		if(!obj.vv_tm_push) return cb(null, {data: null})
-		if(!obj.vv_tm_push.kv6posinfo) return cb(null, {data: null})
+		if(!obj.vv_tm_push) return cb(null, [])
+		if(!obj.vv_tm_push.kv6posinfo) return cb(null, [])
 		const stuff = obj.vv_tm_push.kv6posinfo
 		// log(stuff)
 		cb(null, stuff)
@@ -283,6 +283,7 @@ class Wrapper extends Readable {
 			// console.log('received a message related to:', topic.toString(), 'size:', Buffer.byteLength(message, 'utf-8'))
 			// console.log()
 			zlib.gunzip(message, (err, res) => {
+				if(!res) return
 				if(!this.push(res)) {
 					console.log("buffer full, closing")
 					this._source.close()
